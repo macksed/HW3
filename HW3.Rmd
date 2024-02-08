@@ -1,0 +1,106 @@
+---
+title: "Homework 3"
+author: "Arjun Yenamandra - SDS 315 UT Austin"
+
+
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(fig.height=4, fig.width=7, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60), warning = FALSE, message = FALSE)
+```
+eid: ay7654
+github: [https://github.com/macksed/HW3](https://github.com/macksed/HW3)
+```{r, echo=FALSE, results='hide'}
+library(tidyverse)
+library(ggplot2)
+```
+# **Question 1**
+```{r echo=FALSE}
+creatinine <- read.csv("creatinine.csv")
+```
+
+```{r echo=FALSE}
+model_creatine = lm(creatclear ~ age, data=creatinine)
+coef(model_creatine)
+```
+a) Here we have the coefficients for the linear model made from the creatinine clearance and age variables. Using the intercept and predictor/slope, we can expect a clearance rate of `r -0.6198159 * 55 + 147.8129158` in a 55 year old. The predictor variable changes based on age, and the intercept is a constant which we add to the prior product. 
+
+b) Creatinine clearance rate changes -0.6198159 ml/minute per year of age. This was determined by using the coefficients of the linear model, and seeing that the age column represents a slope figure, which changes with different ages.
+
+c) A 40 year old is expected to have a rate of `r -0.6198159 * 40 + 147.8129158` ml/minute, while a 60 year old is expected to have `r -0.6198159 * 60 + 147.8129158` ml/minute. The residual for the 40 yr old is `r 135 - (-0.6198159 * 40 + 147.8129158)` ml/minute, while the residual for the 60 yr old is `r 112 - (-0.6198159 * 60 + 147.8129158)` ml/minute. Since the residual for the 40 year old is much higher, and a higher clearance rate is better, we can say that the 40 year old is healthier for their age than the 60 year old. We solved the predicted value by adding the intercept to the product of age and the predictor/slope. The residual was calculated by looking at the actual value - the predicted.
+ 
+# **Question 2**
+```{r echo=FALSE}
+market <- read.csv("marketmodel.csv")
+```
+a) Beta measures the relative systematic risk of a stock directly relating to the market as a whole. Assuming that if the market as a whole moves 1%, beta would be the percent amount that a certain stock moves in relation. For example, if Microsoft's beta was 0.95, then microsoft would move +0.95% if the market as a whole were to increase by 1%. The reverse is also true. If the market were to drop 1%, Microsoft's 0.95 beta value indicates that Microsoft would move -0.95%. This value can be calculated by us by regressing the % change of different stocks in relation to the % of the S&P. Beta can also be a negative value.  This means that for every 1% drop in the market, the particular stock would move up by beta %. Due to this, Beta can indicate systematic risk. If a stock's beta is >1, then it is riskier, as it will fall more than the overall market(when the market drops) while also gaining more than the overall market. Beta closer to 0 have lower systemic risk as the market fluctuations will only have a small effect on the price of the stock. Negative beta stocks can be used to hedge against the market as they are negatively correlated.
+
+```{r echo=FALSE}
+
+
+
+model_apple = lm(AAPL ~ SPY, data=market)
+model_g = lm(GOOG ~ SPY, data=market)
+model_m = lm(MRK ~ SPY, data=market)
+model_j = lm(JNJ ~ SPY, data=market)
+model_w = lm(WMT ~ SPY, data=market)
+model_t = lm(TGT ~ SPY, data=market)
+
+column_names <- c("ticker", "intercept", "slope", "Rsquared")
+
+# Create a tibble for the stocks
+stocks <- tibble(
+  ticker = c('AAPL','GOOG','MRK','JNJ','WMT','TGT'),
+  intercept = c(coef(model_apple)[1],coef(model_g)[1],coef(model_m)[1],coef(model_j)[1],coef(model_w)[1],coef(model_t)[1]),
+  slope = c(coef(model_apple)[2],coef(model_g)[2],coef(model_m)[2],coef(model_j)[2],coef(model_w)[2],coef(model_t)[2]),
+  Rsquared = c(cor(market$SPY,market$AAPL)^2,cor(market$SPY,market$GOOG)^2,cor(market$SPY,market$MRK)^2,cor(market$SPY,market$JNJ)^2,cor(market$SPY,market$WMT)^2,cor(market$SPY,market$TGT)^2)
+  
+)
+stocks
+
+
+
+```
+
+b) This table depicts the slope(beta), intercept(alpha), and R squared(correlation) of 6 stocks. The values for these variables were calculated by regressing the daily percentage returns of each stock against the daily percentage return of SPY. 
+
+
+c) The stock with the lowest systematic risk would be WMT(Walmart) as it's beta value is the lowest among the bunch, and farthest from beta=1. The stock with the highest systematic risk would be AAPL(Apple), as its beta is the highest among the 6. Its beta is also above 1, meaning it would change more drastically than the overall market would.
+
+# **Question 3**
+
+```{r echo=FALSE}
+covid <- read.csv("covid.csv")
+italy <- filter(covid, country=="Italy")
+spain <- filter(covid, country=="Spain")
+
+italymodel = lm(log(deaths) ~ days_since_first_death, data = italy)
+spainmodel = lm(log(deaths) ~ days_since_first_death, data = spain)
+```
+1) Italy has an estimated growth rate of `r round(coef(italymodel)[2],3)` and a doubling time of `r round(log(2)/coef(italymodel)[2])` days.
+2) Spain has an estimated growth rate of `r round(coef(spainmodel)[2],3)` and a doubling time of `r round(log(2)/coef(spainmodel)[2])` days. 
+```{r echo=FALSE}
+
+
+ggplot(covid) + geom_line(aes(x=days_since_first_death, y = deaths, color=country))
+
+```
+
+
+
+
+# **Question 4**
+
+```{r echo=FALSE}
+milk <- read.csv("milk.csv")
+```
+
+```{r echo=FALSE}
+milkpower = lm(log(sales) ~ log(price), data=milk)
+coef(milkpower)
+```
+If we fit the data using a logx/logy approach, we can essentially fit the data to a power law model. As our goal is to find the price elasticity, a power law model is optimal. As we can see above, this gives us an estimated price elasticity of demand for milk of `r coef(milkpower)[2]`.
